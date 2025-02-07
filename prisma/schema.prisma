@@ -1,0 +1,107 @@
+
+
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String      @id @default(cuid())
+  fullName    String
+  email       String      @unique
+  phone       String
+  password    String
+  role        Role        @default(PATIENT)
+  patient     Patient?    // One-to-one relationship with Patient
+  approvedAppointments Appointment[] // Reverse relationship for approvedByAdmin
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model Patient {
+  id                        String           @id @default(cuid())
+  birthDate                 DateTime
+  gender                    Gender        
+  street                    String      
+  city                      String
+  state                     String
+  postalCode                String
+  country                   String     
+  occupation                String        
+  emergencyContactName      String        
+  emergencyContactNumber    String        
+  primaryPhysicianId        String?         // Foreign key to Physician
+  primaryPhysician          Physician?      @relation(fields: [primaryPhysicianId], references: [id])
+  insuranceProvider         String        
+  insurancePolicyNumber     String        
+  allergies                 String?       
+  currentMedication         String?       
+  familyMedicalHistory      String?       
+  pastMedicalHistory        String?       
+  identificationType        String?       
+  identificationNumber      String?       
+  identificationDocument    String?       
+  profileImageUrl           String?       
+  treatmentConsent          Boolean       @default(false)
+  disclosureConsent         Boolean       @default(false)
+  privacyConsent            Boolean       @default(false)
+  userId                    String        @unique // Foreign key to User
+  user                      User          @relation(fields: [userId], references: [id])
+  appointments              Appointment[]
+  createdAt                 DateTime      @default(now())
+  updatedAt                 DateTime      @updatedAt
+}
+
+model Appointment {
+  id                String      @id @default(cuid())
+  physicianId       String
+  physician         Physician   @relation(fields: [physicianId], references: [id])
+  schedule          DateTime
+  reason            String   
+  note              String?  
+  cancellationReason String? 
+  status            AppointmentStatus @default(SCHEDULED)
+  patientId         String
+  patient           Patient     @relation(fields: [patientId], references: [id])
+  approvedByAdminId String?     // Foreign key to User (Admin who approved the appointment)
+  approvedByAdmin   User?       @relation(fields: [approvedByAdminId], references: [id])
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+}
+
+model Physician {
+  id          String        @id @default(cuid())
+  name        String
+  specialty   String?
+  imageUrl    String?       // URL to the image stored in cloud storage
+  patients    Patient[]
+  appointments Appointment[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+enum Role {
+  PATIENT
+  ADMIN
+  PHYSICIAN
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  APPROVED
+  CANCELED
+  COMPLETED
+  RESCHEDULED
+  NO_SHOW
+}
