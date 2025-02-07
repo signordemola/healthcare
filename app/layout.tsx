@@ -29,10 +29,6 @@ export default function RootLayout({
           fontSans.variable
         )}
       >
-        {/* <ThemeProvider attribute="class" defaultTheme="system">
-          {children}
-        </ThemeProvider> */}
-
         {children}
       </body>
     </html>
